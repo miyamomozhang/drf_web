@@ -36,8 +36,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # 注册自己的app
-    "app01",
     "rest_framework",
+    "app01",
+    "api01",
+    "article",
 ]
 
 MIDDLEWARE = [
@@ -119,3 +121,9 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# 用自己的local_settings覆盖settings
+try:
+    from .local_settings import *
+except ImportError:
+    pass
