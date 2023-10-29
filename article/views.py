@@ -1,10 +1,16 @@
 from django.http import JsonResponse, Http404
 from .models import Article
 from .serializers import ArticleListSerializer
+from .permissions import IsAdminUserOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework import status
+
+from rest_framework import mixins
+from rest_framework import generics
+
+from rest_framework.permissions import IsAdminUser
 
 # Create your views here.
 # django的返回方式
@@ -16,7 +22,7 @@ def article_list(request):
     return JsonResponse(serializer.data, safe=False)
 """
 
-
+"""
 # 不写请求方式的话，默认只支持GET请求
 # FBV, django rest_framework
 @api_view(["GET", "POST"])
@@ -31,8 +37,17 @@ def article_list(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+"""
 
 
+class ArticleList(generics.ListCreateAPIView):
+    queryset = Article.objects.all()
+    serializer_class = ArticleListSerializer
+    # permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUserOrReadOnly]
+
+
+"""
 # CBV，django rest_framework
 class ArticleDetail(APIView):
     # 单个文章详情页
@@ -61,3 +76,29 @@ class ArticleDetail(APIView):
         article = self.get_object(pk)
         article.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+"""
+
+"""
+# 使用DRF 提供的 Mixin 类，实现增删改查
+class ArticleDetail(mixins.RetrieveModelMixin,
+                    mixins.UpdateModelMixin,
+                    mixins.DestroyModelMixin,
+                    generics.GenericAPIView):
+    queryset = Article.objects.all()
+    serializer_class = ArticleListSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.put(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+"""
+
+
+class ArticleDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Article.objects.all()
+    serializer_class = ArticleListSerializer
+    permission_classes = [IsAdminUserOrReadOnly]
